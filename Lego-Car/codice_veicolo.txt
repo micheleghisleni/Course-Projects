@@ -1,0 +1,117 @@
+from mindstorms import MSHub, Motor, MotorPair, ColorSensor, DistanceSensor, App
+from mindstorms.control import wait_for_seconds, wait_until, Timer
+from mindstorms.operator import greater_than, greater_than_or_equal_to, less_than, less_than_or_equal_to, equal_to, not_equal_to
+import math
+
+
+# Create your objects here.
+hub = MSHub()
+
+motor = Motor('D')
+sterzo = Motor('B')
+sterzo.run_to_position(0, 'shortest path') #azzera sterzo
+
+pinza = Motor('A')
+pinza.run_to_position(0, 'shortest path') #azzera pinza
+altezza = Motor('F')
+
+distance_sensor = DistanceSensor('C')
+color_sensor = ColorSensor('E')
+
+# Write your program here.
+hub.speaker.beep()
+
+# 1: il veicolo arriva alla linea e prende il pezzo
+# guida autonoma 1: nero->destra, giallo->sinistra, blu->stop
+motor.start(8)
+timer = Timer()
+while timer.now() < 50:
+    color = color_sensor.wait_for_new_color()
+    if color == 'black':
+        sterzo.run_to_position(335, 'shortest path', 50)
+    elif color == 'yellow':
+        sterzo.run_to_position(25, 'shortest path', 50)
+    elif color == 'blue':
+        motor.stop()
+        break
+
+sterzo.run_to_position(0, 'shortest path') #azzera sterzo
+
+color_sensor.wait_until_color('white')
+
+# abbassa la pinza
+altezza.run_to_position(150, 'shortest path', 20)
+
+# prendi il dischetto
+pinza.run_to_position(100, 'shortest path', 20) #prendi
+#pinza.run_to_position(0, 'shortest path', 20) #lascia
+
+# solleva la pinza
+altezza.run_to_position(0, 'shortest path', 20)
+
+color_sensor.wait_until_color('blue')
+
+# 2: il veicolo torna indietro e si prepara a raggiungere un altro punto della linea
+# torna indietro: nero->sinistra, giallo->destra, red->stop
+motor.start(-8)
+timer = Timer()
+while timer.now() < 50:
+    color = color_sensor.wait_for_new_color()
+    if color == 'black':
+        sterzo.run_to_position(25, 'shortest path', 50)
+    elif color == 'yellow':
+        sterzo.run_to_position(335, 'shortest path', 50)
+    elif color == 'red':
+        motor.stop()
+        break
+
+sterzo.run_to_position(0, 'shortest path') #azzera sterzo
+
+# 3: il veicolo raggiunge un altro punto della linea e posa il pezzo
+# guida autonoma 2: nero->sinistra, verde->destra, blu->stop
+
+sterzo.run_to_position(25, 'shortest path') #azzera sterzo
+
+motor.start(8)
+timer = Timer()
+while timer.now() < 50:
+    color = color_sensor.wait_for_new_color()
+    if color == 'black':
+        sterzo.run_to_position(25, 'shortest path', 50)
+    elif color == 'green':
+        sterzo.run_to_position(335, 'shortest path', 50)
+    elif color == 'blue':
+        motor.stop()
+        break
+
+color_sensor.wait_until_color('white')
+
+# abbassa la pinza
+altezza.run_to_position(150, 'shortest path', 20)
+
+# prendi il dischetto
+#pinza.run_to_position(100, 'shortest path', 20) #prendi
+pinza.run_to_position(0, 'shortest path', 20) #lascia
+
+# solleva la pinza
+altezza.run_to_position(0, 'shortest path', 20)
+
+# 4: il veicolo torna indietro in attesa di nuovi ordini
+
+color_sensor.wait_until_color('blue')
+sterzo.run_to_position(0, 'shortest path') #azzera sterzo
+
+# torna indietro: nero->destra, verde->sinistra, red->stop
+motor.start(-8)
+timer = Timer()
+while timer.now() < 50:
+    color = color_sensor.wait_for_new_color()
+    if color == 'black':
+        sterzo.run_to_position(335, 'shortest path', 50)
+    elif color == 'green':
+        sterzo.run_to_position(25, 'shortest path', 50)
+    elif color == 'red':
+        motor.stop()
+        break
+
+sterzo.run_to_position(0, 'shortest path') #azzera sterzo
